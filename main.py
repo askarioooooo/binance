@@ -62,7 +62,7 @@ BINANCE_BASE_URL = "https://fapi.binance.com"
 
 LEVERAGE = 20
 STOP_LOSS_PCT = 0.007
-TAKE_PROFIT_PCT = 0.03
+TAKE_PROFIT_PCT = 0.05
 BREAKEVEN_TRIGGER = 0.0075
 MIN_CANDLE_BODY_PCT = 7.0
 
@@ -448,18 +448,17 @@ async def safe_cancel_order(client, symbol, order_id, delay=0.01):
 async def process_candle(client, symbol, candle, symbol_meta, usdt_balance,
                          price_at_candle_close, API_KEY, API_SECRET,
                          active_positions, active_positions_lock):
-    global current_position_symbol, last_signal_timestamps 
+    global current_position_symbol, last_signal_timestamps , last_signal_symbol
     print(
         f"⏱ {datetime.datetime.now().strftime('%H:%M:%S.%f')} process_candle вызван для {symbol}"
     )
 
     now = time.time()
     last_ts = last_signal_timestamps.get(symbol, 0)
-    if now - last_ts < SIGNAL_COOLDOWN_SEC:
-        logging.info(
-            f"⏱ {symbol}: Пропуск — сигнал уже был {int(now - last_ts)} секунд назад"
-        )
+    if last_signal_symbol == symbol:
+        logging.info(f"🔁 Пропущен сигнал {symbol} — предыдущий сигнал был по той же паре")
         return
+      
 
     async with current_position_lock:
         if current_position_symbol is not None:
@@ -484,7 +483,7 @@ async def process_candle(client, symbol, candle, symbol_meta, usdt_balance,
         return
 
     stop_price = entry_price * (1 + 0.007 if side == SIDE_SELL else 1 - 0.007)
-    take_price = entry_price * (1 - 0.03 if side == SIDE_SELL else 1 + 0.03)
+    take_price = entry_price * (1 - 0.05 if side == SIDE_SELL else 1 + 0.05)
 
     send_time = time.time()
 
@@ -549,6 +548,8 @@ async def process_candle(client, symbol, candle, symbol_meta, usdt_balance,
             current_position_symbol = symbol
 
         last_signal_timestamps[symbol] = time.time()
+        last_signal_symbol = symbol
+
 
     except Exception as e:
         logging.error(f"❌ Ошибка при создании MARKET ордера: {e}")
