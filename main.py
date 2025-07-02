@@ -1171,6 +1171,18 @@ async def ws_watchdog(ws, name="WebSocket"):
             raise Exception(f"{name} WebSocket closed")
 
 
+async def keep_alive_ping():
+    import aiohttp
+    while True:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get("https://binance-csy7wa.fly.dev/ping") as resp:
+                    await resp.text()
+                    logging.info("🌐 Keep-alive ping sent")
+        except Exception as e:
+            logging.warning(f"⚠️ Keep-alive ping failed: {e}")
+        await asyncio.sleep(60)
+
 async def main():
     global usdt_balance
 
@@ -1319,6 +1331,7 @@ if __name__ == '__main__':
         try:
             # ✅ Запускаем web сервер как background task
             await start_web_server()
+            asyncio.create_task(keep_alive_ping())  
             asyncio.create_task(auto_restart_every(hours=1))
             await main()
         except KeyboardInterrupt:
@@ -1335,3 +1348,5 @@ if __name__ == '__main__':
     except Exception as e:
         logging.critical("❌ Критический выход из asyncio.run:")
         logging.critical(traceback.format_exc())
+
+
