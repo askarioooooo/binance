@@ -1181,7 +1181,7 @@ async def keep_alive_ping():
                     logging.info("🌐 Keep-alive ping sent")
         except Exception as e:
             logging.warning(f"⚠️ Keep-alive ping failed: {e}")
-        await asyncio.sleep(60)
+        await asyncio.sleep(45)
 
 async def main():
     global usdt_balance
