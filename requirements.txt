@@ -5,3 +5,5 @@ orjson>=3.10.18
 ujson>=5.10.0
 websockets>=15.0.1
 cryptography==44.0.0
+python-dotenv>=1.0.1
+psutil>=6.0.0
