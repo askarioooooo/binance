@@ -1613,6 +1613,9 @@ def setup_signal_handlers(loop, main_task):
             loop.add_signal_handler(sig, shutdown_handler)
         except NotImplementedError:
             signal.signal(sig, lambda s, f: shutdown_handler())
+async def keep_alive():
+    while True:
+        await asyncio.sleep(3600)
 
 if __name__ == "__main__":
     import asyncio
@@ -1632,9 +1635,11 @@ if __name__ == "__main__":
         auto_restart_task = asyncio.create_task(auto_restart_every(hours=1))
 
         try:
-          
-            await run_bot_forever()
-            await start_web_server()
+            await asyncio.gather(
+                run_bot_forever(),
+                keep_alive(),
+               start_web_server()
+)
         except asyncio.CancelledError:
             logging.info("🛑 main_with_shutdown: asyncio.CancelledError")
         except KeyboardInterrupt:
@@ -1666,4 +1671,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("🛑 Получен Ctrl+C — завершение процесса")
         os._exit(0)
+
 
