@@ -1432,7 +1432,18 @@ async def run_bot_forever():
         else:
             logger.info("✅ main() завершился без ошибок — выход из цикла")
             break
+from aiohttp import web
 
+async def handle(request):
+    return web.Response(text="OK")
+
+async def start_web_server():
+    app = web.Application()
+    app.router.add_get("/", handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", 8080)
+    await site.start()
 async def main():
     global usdt_balance
     print("🚀 Бот запущен в обновлённой лимитной конфигурации")
@@ -1621,7 +1632,9 @@ if __name__ == "__main__":
         auto_restart_task = asyncio.create_task(auto_restart_every(hours=1))
 
         try:
+          
             await run_bot_forever()
+            await start_web_server()
         except asyncio.CancelledError:
             logging.info("🛑 main_with_shutdown: asyncio.CancelledError")
         except KeyboardInterrupt:
@@ -1653,3 +1666,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("🛑 Получен Ctrl+C — завершение процесса")
         os._exit(0)
+
